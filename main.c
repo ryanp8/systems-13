@@ -23,11 +23,11 @@ char **split_rows(char *data, int file_size);
 void write_entry(struct pop_entry *entry);
 int write_row(int row[6]);
 int write_data(char **rows);
-void read_csv();
+char **read_csv();
 
 struct pop_entry *read_data();
 void add_data();
-void update_data();
+void update_data(struct pop_entry *current);
 
 
 
@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         if (strcmp(argv[1], "-read_csv") == 0) {
-            read_csv();
+            char **rows = read_csv();
+            int bytes_written = write_data(rows);
+            printf("wrote %d bytes to nyc.data\n", bytes_written);
         }
         if (strcmp(argv[1], "-read_data") == 0) {
             struct pop_entry *entries = read_data();
@@ -45,7 +47,9 @@ int main(int argc, char *argv[]) {
             add_data();
         }
         if (strcmp(argv[1], "-update_data") == 0) {
-            update_data();
+            struct pop_entry *current = read_data();
+            print_entries(current);
+            update_data(current);
         }
     }
     
@@ -84,6 +88,7 @@ int num_rows() {
             total++;
         }
     }
+    free(buffer);
     return total + 1;
 }
 
@@ -165,7 +170,7 @@ int write_data(char **rows) {
 }
 
 
-void read_csv() {
+char **read_csv() {
     printf("reading nyc_pop.csv\n");
     int fd = open("nyc_pop.csv", O_RDONLY);
     struct stat s;
@@ -175,13 +180,13 @@ void read_csv() {
     int res = read(fd, buffer, s.st_size);
     if (res == -1) {
         print_error();
-        return;
+        return NULL;
     } 
 
     char **rows = split_rows(buffer, s.st_size);
-    int bytes_written = write_data(rows);
-    printf("wrote %d bytes to nyc.data\n", bytes_written);
+    free(buffer);
     close(fd);
+    return rows;
 }
 
 
@@ -227,10 +232,7 @@ void add_data() {
 }
 
 
-void update_data() {
-
-    struct pop_entry *current = read_data();
-    print_entries(current);
+void update_data(struct pop_entry *current) {
 
     printf("entry to update: ");
     char entry_buffer[100];
