@@ -229,6 +229,9 @@ void add_data() {
 
 void update_data() {
 
+    struct pop_entry *current = read_data();
+    print_entries(current);
+
     printf("entry to update: ");
     char entry_buffer[100];
     fgets(entry_buffer, sizeof(entry_buffer), stdin);
@@ -245,8 +248,7 @@ void update_data() {
         printf("Invalid entry\n");
         return;
     }
-    struct pop_entry *current = read_data();
-    print_entries(current);
+    
     strcpy(current[target_entry].boro, new_entry.boro);
     current[target_entry].population = new_entry.population;
     current[target_entry].year = new_entry.year;
@@ -259,6 +261,8 @@ void update_data() {
         print_error();
         return;
     }
+
+    printf("File updated\n");
     close(fd);
 }
 
